@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Splitguru - Expense Splitter</title>
+    <!-- Tailwind CSS for modern, aesthetic styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Fallback */
+        }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen text-gray-800 p-4 md:p-8 flex justify-center">
+
+    <!-- Main App Container -->
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[90vh]">
+        
+        <!-- Header -->
+        <div class="bg-indigo-600 p-6 text-white rounded-t-3xl shadow-md z-10 relative">
+            <h1 class="text-2xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-wallet"></i> Splitguru
+            </h1>
+            <p class="text-indigo-200 text-sm mt-1">Split expenses easily with friends.</p>
+        </div>
+
+        <!-- Scrollable Content Area -->
+        <div class="p-6 overflow-y-auto flex-1 space-y-8 relative">
+            
+            <!-- Section 1: Add a Friend -->
+            <section class="space-y-3">
+                <h2 class="text-lg font-semibold text-gray-700 border-b pb-2"><i class="fa-solid fa-user-group text-indigo-500 mr-2"></i>Friends</h2>
+                <div class="flex gap-2">
+                    <input type="text" id="friendNameInput" placeholder="Enter friend's name" class="flex-1 border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                    <button onclick="addFriend()" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 font-semibold px-4 py-2 rounded-xl transition-colors">
+                        Add
+                    </button>
+                </div>
+                <!-- List of added friends -->
+                <div id="friendsList" class="flex flex-wrap gap-2 mt-2">
+                    <!-- Friends badges will be injected here via JS -->
+                </div>
+            </section>
+
+            <!-- Section 2: Add an Expense -->
+            <section class="space-y-4">
+                <h2 class="text-lg font-semibold text-gray-700 border-b pb-2"><i class="fa-solid fa-receipt text-indigo-500 mr-2"></i>Add Expense</h2>
+                
+                <div class="space-y-3 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1">Description</label>
+                        <input type="text" id="expDescription" placeholder="e.g., Dinner at Cafe" class="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <!-- Amount -->
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Amount (₹)</label>
+                            <input type="number" id="expAmount" placeholder="0.00" class="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <!-- Payer -->
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Paid By</label>
+                            <select id="expPayer" class="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                                <!-- Options injected via JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Split With Checkboxes -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-2">Split amongst (Equally)</label>
+                        <div id="splitCheckboxes" class="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 bg-white rounded-xl border border-gray-200">
+                            <!-- Checkboxes injected via JS -->
+                        </div>
+                    </div>
+
+                    <button onclick="addExpense()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-95">
+                        Save Expense
+                    </button>
+                </div>
+            </section>
+
+            <!-- Section 3: Settle Up & Balances -->
+            <section class="space-y-4 pb-4">
+                <div class="flex justify-between items-center border-b pb-2">
+                    <h2 class="text-lg font-semibold text-gray-700"><i class="fa-solid fa-scale-balanced text-indigo-500 mr-2"></i>Balances</h2>
+                    <button onclick="calculateSettlements()" class="text-sm bg-purple-100 hover:bg-purple-200 text-purple-700 font-semibold py-1.5 px-3 rounded-lg transition-colors">
+                        Calculate/Settle Up
+                    </button>
+                </div>
+                
+                <!-- Simple notification for recent expense -->
+                <div id="statusMessage" class="text-sm text-green-600 hidden bg-green-50 p-2 rounded-lg border border-green-100 text-center"></div>
+
+                <!-- Settlement Results -->
+                <div id="settlementsList" class="space-y-2 hidden">
+                    <!-- Results injected via JS -->
+                </div>
+                
+                <!-- Empty state for settlements -->
+                <div id="emptyState" class="text-center text-gray-400 py-6">
+                    <i class="fa-solid fa-ghost text-3xl mb-2 opacity-50"></i>
+                    <p class="text-sm">No settlements yet. Add friends and expenses!</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Frontend Logic -->
+    <script>
+        // State variables
+        let friends = ['You']; // Default user
+        let balances = { 'You': 0 }; // Track net balances. Positive = gets money, Negative = owes money
+
+        // Initialize UI
+        document.addEventListener('DOMContentLoaded', () => {
+            updateFriendsUI();
+        });
+
+        // Add a new friend
+        function addFriend() {
+            const input = document.getElementById('friendNameInput');
+            const name = input.value.trim();
+            
+            if (name && !friends.includes(name)) {
+                friends.push(name);
+                balances[name] = 0; // Initialize balance
+                input.value = '';
+                updateFriendsUI();
+                hideSettlements();
+            } else if (friends.includes(name)) {
+                showMessage("Friend already added!", "red");
+            }
+        }
+
+        // Update all UI elements related to friends (Lists, Dropdowns, Checkboxes)
+        function updateFriendsUI() {
+            // 1. Update Friends Badge List
+            const friendsList = document.getElementById('friendsList');
+            friendsList.innerHTML = friends.map(f => 
+                `<span class="bg-gray-100 text-gray-700 text-xs font-medium px-2.5 py-1.5 rounded-lg border border-gray-200">${f}</span>`
+            ).join('');
+
+            // 2. Update Payer Dropdown
+            const expPayer = document.getElementById('expPayer');
+            const currentPayer = expPayer.value; // Remember selection if possible
+            expPayer.innerHTML = friends.map(f => 
+                `<option value="${f}">${f}</option>`
+            ).join('');
+            if (friends.includes(currentPayer)) expPayer.value = currentPayer;
+
+            // 3. Update Split Checkboxes
+            const splitCheckboxes = document.getElementById('splitCheckboxes');
+            splitCheckboxes.innerHTML = friends.map(f => `
+                <label class="flex items-center space-x-2 cursor-pointer p-1 hover:bg-gray-50 rounded">
+                    <input type="checkbox" value="${f}" checked class="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500">
+                    <span class="text-sm text-gray-700">${f}</span>
+                </label>
+            `).join('');
+        }
+
+        // Add an Expense and update running balances
+        function addExpense() {
+            const desc = document.getElementById('expDescription').value;
+            const amount = parseFloat(document.getElementById('expAmount').value);
+            const payer = document.getElementById('expPayer').value;
+            
+            // Get checked friends
+            const checkboxes = document.querySelectorAll('#splitCheckboxes input[type="checkbox"]:checked');
+            const involvedFriends = Array.from(checkboxes).map(cb => cb.value);
+
+            if (!desc || isNaN(amount) || amount <= 0) {
+                showMessage("Please enter a valid description and amount.", "red");
+                return;
+            }
+            if (involvedFriends.length === 0) {
+                showMessage("Please select at least one person to split with.", "red");
+                return;
+            }
+
+            // --- SPLITTING LOGIC (Frontend Mock) ---
+            // Calculate how much each involved person owes
+            const splitAmount = amount / involvedFriends.length;
+
+            // Payer gets the full amount added to their net balance
+            balances[payer] += amount;
+
+            // Everyone involved (including payer if they are checked) gets splitAmount deducted
+            involvedFriends.forEach(person => {
+                balances[person] -= splitAmount;
+            });
+
+            // Reset Form
+            document.getElementById('expDescription').value = '';
+            document.getElementById('expAmount').value = '';
+            
+            showMessage(`Expense "${desc}" added successfully!`, "green");
+            hideSettlements(); // Hide old calculations so user clicks Settle Up again
+        }
+
+        // Helper to show temporal messages
+        function showMessage(msg, color) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = msg;
+            statusEl.className = `text-sm p-2 rounded-lg border text-center block mb-2 ${color === 'green' ? 'text-green-600 bg-green-50 border-green-100' : 'text-red-600 bg-red-50 border-red-100'}`;
+            setTimeout(() => { statusEl.classList.add('hidden'); }, 3000);
+        }
+
+        function hideSettlements() {
+            document.getElementById('settlementsList').classList.add('hidden');
+            document.getElementById('emptyState').classList.remove('hidden');
+        }
+
+        // --- MOCK SETTLEMENT ALGORITHM (Similar to what your Java code likely does) ---
+        function calculateSettlements() {
+            const settlementsList = document.getElementById('settlementsList');
+            const emptyState = document.getElementById('emptyState');
+            
+            settlementsList.innerHTML = ''; // Clear old
+
+            // Separate into debtors (owes money, negative balance) and creditors (gets money, positive balance)
+            let debtors = [];
+            let creditors = [];
+            
+            // Fix floating point precision issues and separate
+            for (let person in balances) {
+                let bal = Math.round(balances[person] * 100) / 100; 
+                if (bal < -0.01) debtors.push({ name: person, amount: -bal });
+                else if (bal > 0.01) creditors.push({ name: person, amount: bal });
+            }
+
+            // Greedy settlement matching
+            let transactions = [];
+            let i = 0; // debtors index
+            let j = 0; // creditors index
+
+            while (i < debtors.length && j < creditors.length) {
+                let debtor = debtors[i];
+                let creditor = creditors[j];
+                
+                let minAmount = Math.min(debtor.amount, creditor.amount);
+                
+                if (minAmount > 0) {
+                    transactions.push(`${debtor.name} owes ${creditor.name} <span class="font-bold text-gray-800">₹${minAmount.toFixed(2)}</span>`);
+                }
+
+                debtor.amount -= minAmount;
+                creditor.amount -= minAmount;
+
+                if (Math.abs(debtor.amount) < 0.01) i++;
+                if (Math.abs(creditor.amount) < 0.01) j++;
+            }
+
+            // Display Results
+            if (transactions.length === 0) {
+                settlementsList.innerHTML = `<div class="p-4 bg-gray-50 rounded-xl text-center text-gray-500 border border-gray-200"><i class="fa-solid fa-check-circle text-green-500 mr-1"></i> All settled up! No one owes anything.</div>`;
+            } else {
+                transactions.forEach(t => {
+                    settlementsList.innerHTML += `
+                        <div class="flex items-center p-3 bg-white border border-gray-200 rounded-xl shadow-sm">
+                            <div class="bg-red-50 text-red-500 p-2 rounded-lg mr-3"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+                            <div class="text-sm text-gray-600 flex-1">${t}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            emptyState.classList.add('hidden');
+            settlementsList.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
